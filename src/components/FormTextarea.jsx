@@ -3,6 +3,7 @@ export function FormTextarea({
   label = 'Message',
   name,
   value,
+  onChange,
   placeholder,
   rows = 4,
 }) {
@@ -13,27 +14,10 @@ export function FormTextarea({
         id={id}
         name={name}
         value={value}
-        // onChange={onChange}
+        onChange={onChange}
         placeholder={placeholder}
         rows={rows}
       />
     </div>
   )
 }
-
-
-// export function FormTextarea(props) {
-//   return (
-//     <div className="form-field">
-//       <label htmlFor={props.id}>{props.label || 'Message'}</label>
-//       <textarea
-//         id={props.id}
-//         name={props.name}
-//         value={props.value}
-//         // onChange={onChange}
-//         placeholder={props.placeholder}
-//         rows={props.rows}
-//       />
-//     </div>
-//   )
-// }

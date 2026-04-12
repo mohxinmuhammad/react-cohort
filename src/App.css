@@ -255,3 +255,162 @@
     border-right-color: var(--border);
   }
 }
+
+/* —— State lessons (prop drilling demos) —— */
+.lesson-page-header {
+  max-width: 640px;
+  text-align: left;
+  margin-bottom: 8px;
+
+  h1 {
+    margin-bottom: 12px;
+    text-align: center;
+  }
+}
+
+.lesson-intro {
+  font-size: 17px;
+  line-height: 150%;
+  color: var(--text);
+  text-align: left;
+}
+
+.lesson-stack {
+  width: min(100%, 560px);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 8px;
+}
+
+.lesson-card {
+  text-align: left;
+  padding: 22px 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+
+  h2 {
+    margin-bottom: 10px;
+  }
+}
+
+.lesson-lead {
+  font-size: 16px;
+  line-height: 145%;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.lesson-nest {
+  margin-top: 12px;
+  padding: 14px 14px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--code-bg) 65%, transparent);
+}
+
+.lesson-nest--root {
+  margin-top: 0;
+}
+
+.lesson-nest--deep {
+  border-style: solid;
+}
+
+.lesson-role {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.lesson-caption {
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 140%;
+}
+
+.lesson-live {
+  font-size: 16px;
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+.lesson-hint {
+  font-size: 15px;
+  margin: 0 0 12px;
+  line-height: 140%;
+}
+
+.lesson-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  margin-right: 8px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  vertical-align: middle;
+}
+
+.lesson-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.lesson-btn-secondary {
+  font-size: 15px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    border-color: var(--accent-border);
+    background: var(--accent-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.lesson-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 6px;
+}
+
+.lesson-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--text-h);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 88px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+}
