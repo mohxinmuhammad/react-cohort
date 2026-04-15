@@ -1,29 +1,16 @@
-import { useState } from 'react'
-import './App.css'
-import { ParentChildLesson } from './components/lessons/ParentChildLesson'
-import { GlobalFormDrilling } from './components/lessons/GlobalFormDrilling'
-import { GrandparentLesson } from './components/lessons/GrandparentLesson'
 
+import Collage from './components/contextAPI/collage'
+// import { collageContext } from './context/collageContext'
+// import { useContext } from 'react'
+// useContext
 function App() {
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    message: '',
-  })
-  const [globalInteractionCount, setGlobalInteractionCount] = useState(0)
-
-  function handleFieldChange(e) {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
-
-  function handleGlobalFormAction() {
-    setGlobalInteractionCount((n) => n + 1)
-  }
-
   return (
     <>
-      <section id="center">
+    <section className="lesson-card" style={{ backgroundColor: 'steelblue', border: '1px solid black' }}>
+      <h2>Main Page</h2>
+      <Collage />
+    </section>
+      {/* <section id="center">
         <header className="lesson-page-header">
           <h1>State with props</h1>
           <p className="lesson-intro">
@@ -49,7 +36,7 @@ function App() {
 
       <div className="ticks" aria-hidden />
       <div className="ticks" aria-hidden />
-      <section id="spacer" />
+      <section id="spacer" /> */}
     </>
   )
 }
