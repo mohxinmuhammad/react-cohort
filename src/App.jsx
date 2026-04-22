@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import './App.css'
-import Timer from './Timer'
+import Form from './Form'
+import List from './List'
+import Post from './Post'
 
 function App() {
-  const [startTime, setStartTime] = useState(false)
-  const [showTimer, setShowTimer] = useState(false)
+  const [userData, setUserData] = useState([])
 
   return (
     <>
     <div className='container'>
-        {showTimer && <Timer startTime={startTime} />}
-        <button onClick={() => setStartTime(!startTime)}>{startTime ? 'Stop' : 'Start'}</button>
-        <br />
-        <button onClick={() => setShowTimer(!showTimer)}>{showTimer ? 'Hide' : 'Show'}</button>
-      </div>
+        <h2>User Management</h2>
+        {/* <Form setUserData={setUserData} />
+        <List userData={userData} /> */}
+        <Post />
+    </div>
     </>
   )
 }
