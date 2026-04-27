@@ -5,7 +5,6 @@ import axios from 'axios'
 function Post() {
 
   const [postData, setPostData] = useState([])
-
   // by Fetch API
   // const fetchPostData = async () => {
   //   const response = await fetch('https://jsonplaceholder.typicode.com/posts')
@@ -21,16 +20,30 @@ function Post() {
   //   // const data = await response.json()
   //   // setPostData(data)
   // }
+  console.log("initial");
+  console.log("postData", postData);
 
+  try{
+    console.log(undefinedVariable);
+  }catch(error){
+    console.log("error", error);
+  }
   // by Axios
   const fetchPostData = async () => {
-    const response = await axios.get('https://jsonplaceholder.typicode.com/posts')
-    setPostData(response.data)
+    try{
+      const response = await axios.get('https://jsonplaceholder.typicode.com/posts')
+      console.log("response", response);
+      setPostData(response.data)
+    }catch(error){
+      console.log("error in API", error);
+    }
+    console.log("end of API");
   }
-
+  
   useEffect(() => {
-    fetchPostData()
+      fetchPostData()
   }, [])
+  console.log("end");
 
   return (
     <>
@@ -43,7 +56,7 @@ function Post() {
               </tr>
             </thead>
             <tbody>
-              {postData.length > 0 ? (
+              {postData.length > 0 ? ( 
                 postData.map((post) => (
                   <tr key={post.id}>
                     <td>{post.title}</td>

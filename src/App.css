@@ -1,3 +1,84 @@
+.container {
+  width: 100%;
+  max-width: 56rem;
+  margin-inline: auto;
+  padding: 1rem 1.25rem 0;
+  box-sizing: border-box;
+}
+
+.app-nav {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.app-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  justify-content: center;
+}
+
+.app-nav__link {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.app-nav__link:hover {
+  color: var(--text-h);
+  background: var(--social-bg);
+}
+
+.app-nav__link[aria-current='page'] {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.app-main {
+  text-align: left;
+  padding-bottom: 2rem;
+}
+
+.page h1 {
+  font-size: 28px;
+  margin: 0 0 0.5rem;
+}
+
+.page p {
+  margin: 0;
+  color: var(--text);
+  max-width: 40rem;
+}
+
+.page p + p {
+  margin-top: 0.75rem;
+}
+
+.page a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page a:hover {
+  text-decoration: underline;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
