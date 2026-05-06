@@ -54,6 +54,93 @@
   padding-bottom: 2rem;
 }
 
+.lesson {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+  text-align: left;
+}
+
+.lesson h1 {
+  font-size: 26px;
+  margin: 0 0 1rem;
+}
+
+.lesson__section {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.lesson__section:last-child {
+  border-bottom: none;
+}
+
+.lesson__section h2 {
+  font-size: 18px;
+  margin: 0 0 0.5rem;
+}
+
+.lesson__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--text);
+}
+
+.lesson__list li + li {
+  margin-top: 0.5rem;
+}
+
+.lesson__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 0.75rem;
+}
+
+.lesson__label input {
+  max-width: 12rem;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.demo-callback-child {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--social-bg);
+}
+
+.demo-callback-child code {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.lesson__section button {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.lesson__section button:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
 .page h1 {
   font-size: 28px;
   margin: 0 0 0.5rem;

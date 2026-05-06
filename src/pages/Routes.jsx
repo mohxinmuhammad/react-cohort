@@ -18,7 +18,7 @@ function RoutesPage() {
       <Route path='/blog' element={<Blog />} />  
       <Route path='/contact' element={<Contact />} />
       <Route path='/post_detail/:id' element={<PostDetail />} />
-      {/* 404 not found page */}
+      {/* 404 not found page */} 
       <Route path='*' element={<FourOhFour />} />
       
     </Routes>
