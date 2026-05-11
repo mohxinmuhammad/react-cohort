@@ -1,98 +1,93 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
 import './App.css'
-import CalculatedValue from './pages/CalculatedValue'
-import CallbackDemoChild from './pages/CallbackDemoChild'
+import { useActionState, useState } from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [data, setData] = useState(0)
-
-  // --- useMemo: caches a computed VALUE; factory runs only when deps change
-  const memoRunCount = useRef(0)
-  const memoizedTotal = useMemo(() => {
-    memoRunCount.current += 1
-    const n = Number(count) || 0
-    let acc = n
-    for (let i = 0; i < 500; i++) acc += i % 7
-    return acc
-  }, [count])
-
-  // --- useCallback: caches a FUNCTION reference; new fn only when deps change
-  const stablePing = useCallback(() => {
-    alert(`useCallback handler — count is ${count}`)
-  }, [count])
-
-  const unstablePing = () => {
-    alert(`inline handler — count is ${count}`)
+  const handleSubmit = (prevData, formData) => {
+    const firstName = (formData.get('firstName') ?? '').toString().trim()
+    const lastName = (formData.get('lastName') ?? '').toString().trim()
+    const email = (formData.get('email') ?? '').toString().trim()
+    const phone = (formData.get('phone') ?? '').toString().trim()
+    if(!firstName) {
+      return { error: 'First Name is required' }
+    } else if(!lastName) {
+      return { error: 'Last Name is required' }
+    } else if(!email) {
+      return { error: 'Email is required' }
+    } else if(!phone) {
+      return { error: 'Phone is required' }
+    } else if(phone && phone.length !== 10) {
+      return { error: 'Phone must be 10 digits' }
+    } else if(email && email.includes('@') === false) {
+      return { error: 'Email must contain @' }
+    } else if(firstName && firstName.length < 3) {
+      return { error: 'First Name must be at least 3 characters' }
+    } else if(lastName && lastName.length < 3) {
+      return { error: 'Last Name must be at least 3 characters' }
+    } else {
+      return {
+        ...prevData,
+        firstName,
+        lastName,
+        email,
+        phone,
+        error: null,
+        message: 'Form submitted successfully',
+      }
+    }
+    // controlled error and validation
+    // e.preventDefault()
+    // if(firstName === '') {
+    //   setError('First Name is required')
+    // } else if(lastName === '') {
+    //   setError('Last Name is required')
+    // } else if(email === '') {
+    //   setError('Email is required')
+    // } else if(phone === '') {
+    //   setError('Phone is required')
+    // } else if(phone.length !== 10) {
+    //   setError('Phone must be 10 digits')
+    // } else if(email.includes('@') === false) {
+    //   setError('Email must contain @')
+    // } else if(firstName.length < 3) {
+    //   setError('First Name must be at least 3 characters')
+    // } else if(lastName.length < 3) {
+    //   setError('Last Name must be at least 3 characters')
+    // }else {
+    //   setError('')
+    //   setMessage('Form submitted successfully')
+    // }
   }
 
+  const [state, formAction, submitting] = useActionState(handleSubmit, {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    error: null,
+    message: null
+  })
+
   return (
-    <div className='lesson'>
-      <h1>useMemo vs useCallback</h1>
-
-      <section className='lesson__section'>
-        <h2>Difference in one line</h2>
-        <ul className='lesson__list'>
-          <li>
-            <strong>useMemo</strong> — remembers a <em>value</em> (number, object,
-            JSX, anything). Skips redoing expensive work until dependencies change.
-          </li>
-          <li>
-            <strong>useCallback</strong> — remembers a <em>function</em>. It is
-            roughly <code>useMemo(() =&gt; yourFn, deps)</code>. Use when you pass
-            callbacks into <code>memo</code> children or into other hooks’
-            dependency arrays.
-          </li>
-        </ul>
-      </section>
-
-      <section className='lesson__section'>
-        <h2>useMemo — expensive calculation</h2>
-        <p>
-          The loop runs only when <code>count</code> changes. Click “Bump data” —
-          that updates <code>data</code>, not <code>count</code>, so the number
-          below should <strong>not</strong> increase.
-        </p>
-        <label className='lesson__label'>
-          count{' '}
-          <input
-            type='text'
-            value={count}
-            onChange={(e) => setCount(e.target.value)}
-          />
-        </label>
-        <p>
-          Memoized total: <strong>{memoizedTotal}</strong>
-        </p>
-        <p>
-          Times the memo factory ran: <strong>{memoRunCount.current}</strong>
-        </p>
-        <button type='button' onClick={() => setData((d) => d + 1)}>
-          Bump data (unrelated state): {data}
-        </button>
-      </section>
-
-      <section className='lesson__section'>
-        <h2>useCallback + React.memo child</h2>
-        <p>
-          Both children are wrapped in <code>memo()</code>. Bump <strong>data</strong>{' '}
-          only: the <strong>stable</strong> child keeps the same callback reference,
-          so its render count should stay flat. The <strong>unstable</strong> child
-          gets a new inline function every parent render, so it re-renders every time.
-        </p>
-        <CallbackDemoChild label='Stable callback (useCallback)' onPing={stablePing} />
-        <CallbackDemoChild
-          label='Unstable callback (new function each render)'
-          onPing={unstablePing}
-        />
-      </section>
-
-      <section className='lesson__section'>
-        <h2>Child component with useMemo inside</h2>
-        <CalculatedValue count={count} />
-      </section>
+    <div>
+      <h1>User Form</h1>
+      {state?.message && <span style={{ color: 'green' }}>{state.message}</span>}
+      {state?.error && <span style={{ color: 'red' }}>{state.error}</span>}
+      {/* {error && <span style={{ color: 'red' }}>{error}</span>}
+      {message && <span style={{ color: 'green' }}>{message}</span>} */}
+      <form action={formAction}>
+        <input type="text" name="firstName" placeholder="First Name" defaultValue={state?.firstName} />
+        <br />  
+        <input type="text" name="lastName" placeholder="Last Name" defaultValue={state?.lastName} />
+        <br />
+        <input type="email" name="email" placeholder="Email" defaultValue={state?.email} />
+        <br />
+        <input type="number" name="phone" placeholder="Phone" defaultValue={state?.phone} />
+        <br />
+        <button type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit'}</button>
+      </form>
     </div>
   )
+  
 }
 
 export default App
