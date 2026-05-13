@@ -1,90 +1,115 @@
 import './App.css'
-import { useActionState, useState } from 'react'
+import { useEffect, useState } from "react";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import {
+  createUserWithEmailAndPassword, //for sign up
+  getAuth, //for authentication
+  GoogleAuthProvider, //for Google authentication
+  onAuthStateChanged, //for checking if user is logged in or not
+  signInWithEmailAndPassword, //for logging in with email and password
+  signInWithPopup, //for logging in with Google
+  signOut, //for logging out
+} from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCzx3oA0p99pxOHttkrf4dzdsNwdZLagYM",
+  authDomain: "react-web-mwf.firebaseapp.com",
+  projectId: "react-web-mwf",
+  storageBucket: "react-web-mwf.firebasestorage.app",
+  messagingSenderId: "699799723842",
+  appId: "1:699799723842:web:982308bc69ad3d47f972db",
+  measurementId: "G-LNDC8M07HC"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+getAnalytics(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 function App() {
-  const handleSubmit = (prevData, formData) => {
-    const firstName = (formData.get('firstName') ?? '').toString().trim()
-    const lastName = (formData.get('lastName') ?? '').toString().trim()
-    const email = (formData.get('email') ?? '').toString().trim()
-    const phone = (formData.get('phone') ?? '').toString().trim()
-    if(!firstName) {
-      return { error: 'First Name is required' }
-    } else if(!lastName) {
-      return { error: 'Last Name is required' }
-    } else if(!email) {
-      return { error: 'Email is required' }
-    } else if(!phone) {
-      return { error: 'Phone is required' }
-    } else if(phone && phone.length !== 10) {
-      return { error: 'Phone must be 10 digits' }
-    } else if(email && email.includes('@') === false) {
-      return { error: 'Email must contain @' }
-    } else if(firstName && firstName.length < 3) {
-      return { error: 'First Name must be at least 3 characters' }
-    } else if(lastName && lastName.length < 3) {
-      return { error: 'Last Name must be at least 3 characters' }
-    } else {
-      return {
-        ...prevData,
-        firstName,
-        lastName,
-        email,
-        phone,
-        error: null,
-        message: 'Form submitted successfully',
-      }
-    }
-    // controlled error and validation
-    // e.preventDefault()
-    // if(firstName === '') {
-    //   setError('First Name is required')
-    // } else if(lastName === '') {
-    //   setError('Last Name is required')
-    // } else if(email === '') {
-    //   setError('Email is required')
-    // } else if(phone === '') {
-    //   setError('Phone is required')
-    // } else if(phone.length !== 10) {
-    //   setError('Phone must be 10 digits')
-    // } else if(email.includes('@') === false) {
-    //   setError('Email must contain @')
-    // } else if(firstName.length < 3) {
-    //   setError('First Name must be at least 3 characters')
-    // } else if(lastName.length < 3) {
-    //   setError('Last Name must be at least 3 characters')
-    // }else {
-    //   setError('')
-    //   setMessage('Form submitted successfully')
-    // }
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
 
-  const [state, formAction, submitting] = useActionState(handleSubmit, {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    error: null,
-    message: null
-  })
+  useEffect(() => {
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  const handleSignUp = async () => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleLogIn = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleGoogleLogIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleLogOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   return (
     <div>
-      <h1>User Form</h1>
-      {state?.message && <span style={{ color: 'green' }}>{state.message}</span>}
-      {state?.error && <span style={{ color: 'red' }}>{state.error}</span>}
-      {/* {error && <span style={{ color: 'red' }}>{error}</span>}
-      {message && <span style={{ color: 'green' }}>{message}</span>} */}
-      <form action={formAction}>
-        <input type="text" name="firstName" placeholder="First Name" defaultValue={state?.firstName} />
-        <br />  
-        <input type="text" name="lastName" placeholder="Last Name" defaultValue={state?.lastName} />
-        <br />
-        <input type="email" name="email" placeholder="Email" defaultValue={state?.email} />
-        <br />
-        <input type="number" name="phone" placeholder="Phone" defaultValue={state?.phone} />
-        <br />
-        <button type="submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit'}</button>
-      </form>
+      <h1>React with Firebase</h1>
+      {user ? (
+        <div>
+          <p>Signed in as {user.email ?? user.uid}</p>
+          <button type="button" onClick={handleLogOut}>
+            Sign out
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Email"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Password"
+          />
+          <br />
+          <button type="button" onClick={handleLogIn}>
+            Log in
+          </button>
+          <br />
+          <button type="button" onClick={handleSignUp}>
+            Sign up
+          </button>
+          <br />
+          <button type="button" onClick={handleGoogleLogIn}>
+            Continue with Google
+          </button>
+        </>
+      )}
     </div>
   )
   
