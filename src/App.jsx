@@ -1,7 +1,7 @@
 import './App.css'
 import { useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { app } from "./firebase";
+import Home from "./pages/Home.jsx"
 import {
   createUserWithEmailAndPassword, //for sign up
   getAuth, //for authentication
@@ -11,24 +11,7 @@ import {
   signInWithPopup, //for logging in with Google
   signOut, //for logging out
 } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCzx3oA0p99pxOHttkrf4dzdsNwdZLagYM",
-  authDomain: "react-web-mwf.firebaseapp.com",
-  projectId: "react-web-mwf",
-  storageBucket: "react-web-mwf.firebasestorage.app",
-  messagingSenderId: "699799723842",
-  appId: "1:699799723842:web:982308bc69ad3d47f972db",
-  measurementId: "G-LNDC8M07HC"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-getAnalytics(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -77,12 +60,13 @@ function App() {
     <div>
       <h1>React with Firebase</h1>
       {user ? (
-        <div>
-          <p>Signed in as {user.email ?? user.uid}</p>
-          <button type="button" onClick={handleLogOut}>
-            Sign out
-          </button>
-        </div>
+        <Home />
+        // <div>
+        //   <p>Signed in as {user.email ?? user.uid}</p>
+        //   <button type="button" onClick={handleLogOut}>
+        //     Sign out
+        //   </button>
+        // </div>
       ) : (
         <>
           <input
