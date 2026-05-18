@@ -31,6 +31,9 @@ function Home() {
   const [errors, setErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [firebaseError, setFirebaseError] = useState('');
 
   useEffect(() => {
     const q = query(collection(db, 'todos'));
@@ -38,8 +41,8 @@ function Home() {
       q,
       (snapshot) => {
         const nextTodos = snapshot.docs.map((d) => ({
-          id: d.id,
           ...d.data(),
+          id: d.id,
         }));
         setTodos(nextTodos);
       },
@@ -84,6 +87,26 @@ function Home() {
     setFormData(EMPTY_FORM);
     setEditingId(null);
     setErrors({});
+    setFirebaseError('');
+  };
+
+  const todoPayload = () => ({
+    task: formData.task.trim(),
+    description: formData.description.trim(),
+    status: formData.status,
+    dueDate: formData.dueDate,
+  });
+
+  const updateTodoInFirebase = async (id) => {
+    const todoRef = doc(db, 'todos', id);
+    await updateDoc(todoRef, {
+      ...todoPayload(),
+      updatedAt: new Date().toLocaleString(),
+    });
+  };
+
+  const deleteTodoFromFirebase = async (id) => {
+    await deleteDoc(doc(db, 'todos', id));
   };
 
   const handleSubmit = async (e) => {
@@ -95,35 +118,36 @@ function Home() {
       return;
     }
 
+    setSaving(true);
+    setFirebaseError('');
+
     try {
       if (editingId) {
-        await updateDoc(doc(db, 'todos', editingId), {
-          task: formData.task,
-          description: formData.description,
-          status: formData.status,
-          dueDate: formData.dueDate,
-        });
+        await updateTodoInFirebase(editingId);
       } else {
         await addDoc(collection(db, 'todos'), {
-          task: formData.task,
-          description: formData.description,
-          status: formData.status,
-          dueDate: formData.dueDate,
+          ...todoPayload(),
           createdAt: new Date().toLocaleString(),
         });
       }
       resetForm();
     } catch (error) {
       console.error('Failed to save todo:', error);
+      setFirebaseError(
+        editingId ? 'Could not update todo. Try again.' : 'Could not add todo. Try again.'
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleEdit = (todo) => {
+    setFirebaseError('');
     setFormData({
-      task: todo.task,
-      description: todo.description,
-      status: todo.status,
-      dueDate: todo.dueDate,
+      task: todo.task ?? '',
+      description: todo.description ?? '',
+      status: todo.status ?? 'pending',
+      dueDate: todo.dueDate ?? '',
     });
     setEditingId(todo.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -131,20 +155,30 @@ function Home() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this todo?')) return;
+
+    setDeletingId(id);
+    setFirebaseError('');
+
     try {
-      await deleteDoc(doc(db, 'todos', id));
+      await deleteTodoFromFirebase(id);
       if (editingId === id) resetForm();
     } catch (error) {
       console.error('Failed to delete todo:', error);
+      setFirebaseError('Could not delete todo. Try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  const filteredTodos = todos.filter(todo =>
-    todo.task.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    todo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    todo.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (todo.dueDate ?? '').includes(searchTerm)
-  );
+  const filteredTodos = todos.filter(todo => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (todo.task ?? '').toLowerCase().includes(term) ||
+      (todo.description ?? '').toLowerCase().includes(term) ||
+      (todo.status ?? '').toLowerCase().includes(term) ||
+      (todo.dueDate ?? '').includes(searchTerm)
+    );
+  });
 
   const formatStatus = (status) =>
     STATUS_OPTIONS.find(o => o.value === status)?.label ?? status;
@@ -156,6 +190,11 @@ function Home() {
 
         <div className='form-section'>
           <h2>{editingId ? 'Edit Todo' : 'Add Todo'}</h2>
+          {firebaseError && (
+            <p className='error-text form-error-banner' role='alert'>
+              {firebaseError}
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className='todo-form'>
             <div className='form-group'>
@@ -222,14 +261,23 @@ function Home() {
             </div>
 
             <div className='form-buttons'>
-              <button type='submit' className='btn btn-primary'>
-                {editingId ? 'Update Todo' : 'Add Todo'}
+              <button
+                type='submit'
+                className='btn btn-primary'
+                disabled={saving || deletingId !== null}
+              >
+                {saving
+                  ? 'Saving...'
+                  : editingId
+                    ? 'Update Todo'
+                    : 'Add Todo'}
               </button>
               {editingId && (
                 <button
                   type='button'
                   className='btn btn-secondary'
                   onClick={resetForm}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
@@ -278,7 +326,10 @@ function Home() {
                 </thead>
                 <tbody>
                   {filteredTodos.map((todo, index) => (
-                    <tr key={todo.id}>
+                    <tr
+                      key={todo.id}
+                      className={editingId === todo.id ? 'row-editing' : ''}
+                    >
                       <td className='cell-index'>{index + 1}</td>
                       <td className='cell-task'>{todo.task}</td>
                       <td className='cell-description'>{todo.description}</td>
@@ -294,6 +345,7 @@ function Home() {
                           type='button'
                           className='btn btn-edit'
                           onClick={() => handleEdit(todo)}
+                          disabled={saving || deletingId !== null}
                         >
                           Edit
                         </button>
@@ -301,8 +353,9 @@ function Home() {
                           type='button'
                           className='btn btn-delete'
                           onClick={() => handleDelete(todo.id)}
+                          disabled={deletingId === todo.id || saving}
                         >
-                          Delete
+                          {deletingId === todo.id ? 'Deleting...' : 'Delete'}
                         </button>
                       </td>
                     </tr>

@@ -109,6 +109,24 @@ h2 {
   font-weight: 500;
 }
 
+.form-error-banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.todos-table tbody tr.row-editing {
+  background-color: #eff6ff;
+}
+
 .form-buttons {
   grid-column: 1 / -1;
   display: flex;
