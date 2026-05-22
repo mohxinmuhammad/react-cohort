@@ -9,7 +9,14 @@ import {
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+
+// import {
+//   uploadTodoFile,
+//   deleteTodoFile,
+//   validateTodoFile,
+// } from '../utils/todoStorage';
 
 const EMPTY_FORM = {
   task: '',
@@ -34,6 +41,37 @@ function Home() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [firebaseError, setFirebaseError] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [existingAttachment, setExistingAttachment] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+
+
+  async function uploadTodoFile(file, todoId) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `todos/${todoId}/${Date.now()}_${safeName}`;
+    const storageRef = ref(storage, storagePath);
+  
+    await uploadBytes(storageRef, file);
+    const fileUrl = await getDownloadURL(storageRef);
+  
+    return {
+      fileUrl,
+      fileName: file.name,
+      storagePath,
+    };
+  }
+  
+  async function deleteTodoFile(storagePath) {
+    if (!storagePath) return;
+    await deleteObject(ref(storage, storagePath));
+  }
+  
+  useEffect(() => {
+    return () => {
+      if (filePreview) URL.revokeObjectURL(filePreview);
+    };
+  }, [filePreview]);
 
   useEffect(() => {
     const q = query(collection(db, 'todos'));
@@ -83,11 +121,67 @@ function Home() {
     }
   };
 
+  const clearFileSelection = () => {
+    if (filePreview) URL.revokeObjectURL(filePreview);
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (errors.file) {
+      setErrors(prev => ({ ...prev, file: '' }));
+    }
+  };
+
   const resetForm = () => {
     setFormData(EMPTY_FORM);
     setEditingId(null);
     setErrors({});
     setFirebaseError('');
+    setExistingAttachment(null);
+    clearFileSelection();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    // e.target.value = '';
+    if (!file) return;
+    setSelectedFile(file);
+
+    // const fileError = validateTodoFile(file);
+    // if (fileError) {
+    //   setErrors(prev => ({ ...prev, file: fileError }));
+    //   return;
+    // }
+
+    // clearFileSelection();
+    // setErrors(prev => ({ ...prev, file: '' }));
+
+    // if (file.type.startsWith('image/')) {
+    //   setFilePreview(URL.createObjectURL(file));
+    // }
+  };
+
+  const getAttachmentFields = () => {
+    if (selectedFile) return null;
+    if (existingAttachment) {
+      return {
+        fileUrl: existingAttachment.fileUrl,
+        fileName: existingAttachment.fileName,
+        storagePath: existingAttachment.storagePath,
+      };
+    }
+    return {
+      fileUrl: null,
+      fileName: null,
+      storagePath: null,
+    };
+  };
+
+  const uploadFileForTodo = async (file, todoId) => {
+    setUploadingFile(true);
+    try {
+      return await uploadTodoFile(file, todoId);
+    } finally {
+      setUploadingFile(false);
+    }
   };
 
   const todoPayload = () => ({
@@ -97,15 +191,17 @@ function Home() {
     dueDate: formData.dueDate,
   });
 
-  const updateTodoInFirebase = async (id) => {
+  const updateTodoInFirebase = async (id, attachment) => {
     const todoRef = doc(db, 'todos', id);
     await updateDoc(todoRef, {
       ...todoPayload(),
+      ...attachment,
       updatedAt: new Date().toLocaleString(),
     });
   };
 
-  const deleteTodoFromFirebase = async (id) => {
+  const deleteTodoFromFirebase = async (id, storagePath) => {
+    await deleteTodoFile(storagePath);
     await deleteDoc(doc(db, 'todos', id));
   };
 
@@ -123,12 +219,43 @@ function Home() {
 
     try {
       if (editingId) {
-        await updateTodoInFirebase(editingId);
+        let attachment = getAttachmentFields();
+
+        if (selectedFile) {
+          if (existingAttachment?.storagePath) {
+            await deleteTodoFile(existingAttachment.storagePath);
+          }
+          attachment = await uploadFileForTodo(selectedFile, editingId);
+        }
+
+        await updateTodoInFirebase(editingId, attachment);
       } else {
-        await addDoc(collection(db, 'todos'), {
+        const docRef = await addDoc(collection(db, 'todos'), {
           ...todoPayload(),
+          fileUrl: null,
+          fileName: null,
+          storagePath: null,
           createdAt: new Date().toLocaleString(),
         });
+
+        if (selectedFile) {
+          // const attachment = await uploadTodoFile(selectedFile, docRef.id);
+          // const attachment = await uploadFileForTodo(selectedFile, docRef.id);
+          // const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const storagePath = `todos/${selectedFile.name}`;
+          const storageRef = ref(storage, storagePath);
+        
+          await uploadBytes(storageRef, selectedFile);
+          const fileUrl = await getDownloadURL(storageRef);
+        
+          const attachment = {
+            fileUrl,
+            fileName: selectedFile.name,
+            storagePath,
+          };
+
+          await updateDoc(doc(db, 'todos', docRef.id), attachment);
+        }
       }
       resetForm();
     } catch (error) {
@@ -150,6 +277,16 @@ function Home() {
       dueDate: todo.dueDate ?? '',
     });
     setEditingId(todo.id);
+    clearFileSelection();
+    if (todo.fileUrl) {
+      setExistingAttachment({
+        fileUrl: todo.fileUrl,
+        fileName: todo.fileName,
+        storagePath: todo.storagePath,
+      });
+    } else {
+      setExistingAttachment(null);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -160,7 +297,8 @@ function Home() {
     setFirebaseError('');
 
     try {
-      await deleteTodoFromFirebase(id);
+      const todo = todos.find(t => t.id === id);
+      await deleteTodoFromFirebase(id, todo?.storagePath);
       if (editingId === id) resetForm();
     } catch (error) {
       console.error('Failed to delete todo:', error);
@@ -260,14 +398,64 @@ function Home() {
               )}
             </div>
 
+            <div className='form-group form-group--full'>
+              <label htmlFor='attachment'>Attachment (optional)</label>
+              <input
+                type='file'
+                id='attachment'
+                // accept={ACCEPTED_FILE_TYPES.join(',')}
+                onChange={handleFileChange}
+                disabled={saving || uploadingFile}
+              />
+              <span className='file-hint'>Max 5 MB — images, PDF, or text</span>
+              {errors.file && <span className='error-text'>{errors.file}</span>}
+
+              {selectedFile && (
+                <div className='file-preview'>
+                  {filePreview && (
+                    <img src={filePreview} alt='Preview' className='file-preview-img' />
+                  )}
+                  <span>{selectedFile.name}</span>
+                  <button
+                    type='button'
+                    className='btn btn-secondary btn-sm'
+                    onClick={clearFileSelection}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              {!selectedFile && existingAttachment && (
+                <div className='file-preview'>
+                  <a
+                    href={existingAttachment.fileUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {existingAttachment.fileName ?? 'View file'}
+                  </a>
+                  <button
+                    type='button'
+                    className='btn btn-secondary btn-sm'
+                    onClick={() => setExistingAttachment(null)}
+                  >
+                    Remove file
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className='form-buttons'>
               <button
                 type='submit'
                 className='btn btn-primary'
-                disabled={saving || deletingId !== null}
+                disabled={saving || uploadingFile || deletingId !== null}
               >
-                {saving
-                  ? 'Saving...'
+                {saving || uploadingFile
+                  ? uploadingFile
+                    ? 'Uploading...'
+                    : 'Saving...'
                   : editingId
                     ? 'Update Todo'
                     : 'Add Todo'}
@@ -321,6 +509,7 @@ function Home() {
                     <th>Status</th>
                     <th>Due Date</th>
                     <th>Created At</th>
+                    <th>File</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -340,6 +529,19 @@ function Home() {
                       </td>
                       <td className='cell-date'>{todo.dueDate}</td>
                       <td className='cell-date'>{todo.createdAt}</td>
+                      <td className='cell-file'>
+                        {todo.fileUrl ? (
+                          <a
+                            href={todo.fileUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                          >
+                            {todo.fileName ?? 'Download'}
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className='cell-actions'>
                         <button
                           type='button'
